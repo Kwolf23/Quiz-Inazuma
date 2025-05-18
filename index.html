@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUIZ INAZUMA ELEVEN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Bangers', cursive;
+      text-align: center;
+      background: url('https://vignette.wikia.nocookie.net/inazuma-eleven/images/9/9a/Raimon_School_GO.png/revision/latest?cb=20190123105310&path-prefix=fr') no-repeat center center fixed;
+      background-size: cover;
+      padding: 20px;
+      color: #fff;
+    }
+    h1 {
+  color: #00bfff;
+  font-size: 3em;
+  text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000;
+}
+    #mensaje-intro {
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      color: white;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    #contador {
+      position: fixed;
+      left: 20px;
+      top: 100px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1.2em;
+    }
+    img {
+      max-width: 350px;
+      height: auto;
+      border-radius: 10px;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    input, button {
+      padding: 15px;
+      margin: 10px;
+      font-size: 18px;
+      border-radius: 8px;
+    }
+    input {
+      width: 300px;
+    }
+    .correcto { color: #00ff00; font-weight: bold; }
+    .incorrecto { color: #ff4444; font-weight: bold; }
+    #sugerenciasContainer {
+      margin-top: 5px;
+      position: static;
+      max-width: 300px;
+      text-align: left;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      display: none;
+      z-index: 999;
+      color: black;
+    }
+    .sugerencia {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .sugerencia:hover {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <div id="contador">Aciertos: 0 | Errores: 0 de 60</div>
+  <h1>QUIZ INAZUMA ELEVEN</h1>
+  <div id="mensaje-intro">¿Crees que sabes mucho de Inazuma Eleven? Vamos a comprobar si es verdad.</div>
+  <img id="jugadorImg" src="" alt="Jugador Inazuma" />
+  <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+    <div id="sugerenciasContainer" style="position: relative;"></div>
+    <input type="text" id="respuesta" placeholder="Escribe el nombre..." oninput="mostrarSugerencias()" onblur="ocultarSugerencias()" autocomplete="off" />
+    <button onclick="verificarNombre()">Verificar</button>
+  </div>
+  <p id="resultado"></p>
+
+  <audio id="sonidoAcierto" src="https://cdn.pixabay.com/audio/2022/03/15/audio_5e0225ad74.mp3"></audio>
+<audio id="sonidoFallo" src="https://cdn.pixabay.com/audio/2022/03/15/audio_cfa5e6c4f6.mp3"></audio>
+<script>
+    const jugadores = [
+      { nombre: "Mark Evans", img: "https://3.bp.blogspot.com/--2LSD2DtAkg/V5X5tjCqcdI/AAAAAAAAACg/XeaI8RgaP5k5UKPR0cdNd_g3EEqYPYrgQCLcB/s1600/Mark-itos.png" },
+      { nombre: "Axel Blaze", img: "https://cdn.wallpapersafari.com/67/94/hbIVHX.jpg" },
+      { nombre: "Shawn Froste", img: "http://images1.wikia.nocookie.net/__cb20111224221428/inazuma/es/images/7/70/0e1a1e23.jpg" },
+      { nombre: "Jude Sharp", img: "http://3.bp.blogspot.com/-vwhSWuFmAZg/UDUuk5PTSzI/AAAAAAAAAW8/jEj_GY9X4Cg/s1600/059.jpg" },
+      { nombre: "Nathan Swift", img: "https://vignette.wikia.nocookie.net/inazumaeleven/images/9/92/Nathan_w_barwach_Inazuma_Japan.jpg/revision/latest?cb=20170108101718&path-prefix=pl" },
+      { nombre: "Jack Wallside", img: "https://vignette.wikia.nocookie.net/inazuma-eleven/images/f/f9/Jack_wallside.png/revision/latest?cb=20130517150748&path-prefix=de" },
+      { nombre: "Bobby Shearer", img: "https://vignette.wikia.nocookie.net/inazuma/images/9/99/97-46.jpg/revision/latest?cb=20111002191747&path-prefix=es" },
+      { nombre: "Kevin Dragonfly", img: "https://vignette.wikia.nocookie.net/inazuma-eleven/images/f/f9/500px-Someoka_Ryuugo%2C_before_the_last_match.png/revision/latest?cb=20130601150249&path-prefix=pl" },
+      { nombre: "Erik Eagle", img: "https://i.pinimg.com/736x/ba/80/a0/ba80a050f47d071fd6913981dfe05e2c.jpg" },
+      { nombre: "Hurley Kane", img: "http://vignette1.wikia.nocookie.net/inazuma-eleven/images/2/2d/Hurley-IJapon.png/revision/latest?cb=20160704101824&path-prefix=fr" },
+      { nombre: "Xavier Foster", img: "https://i.pinimg.com/736x/a4/6a/c7/a46ac7b05777b9f804973333ba938798.jpg" },
+      { nombre: "Jordan Greenway", img: "https://pm1.narvii.com/6372/6590d52bdb844523cb9eea50667ee1c30192872f_hq.jpg" },
+      { nombre: "Aiden Frost", img: "https://vignette.wikia.nocookie.net/inazumaelevenwiki-italia/images/f/fb/Aiden_Froste.png/revision/latest?cb=20130219224416&path-prefix=it" },
+      { nombre: "Byron Love", img: "https://vignette.wikia.nocookie.net/inazuma-eleven/images/9/97/Byron-Love.jpeg/revision/latest?cb=20151125134304&path-prefix=fr" },
+      { nombre: "Gazelle", img: "http://pm1.narvii.com/6896/0e3f4863c3e259fbacb8f3787a933e9c0043a64fr1-661-669v2_uhq.jpg" },
+      { nombre: "Torch", img: "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/07ec1370-2971-4e9a-a58b-39f619d460d1/width=1200/07ec1370-2971-4e9a-a58b-39f619d460d1.jpeg" },
+      { nombre: "Dvalin", img: "http://pm1.narvii.com/6205/e2cc83acfff0b90aafef2e48538dc918595dc55b_00.jpg" },
+      { nombre: "Zanark Avalonic", img: "http://img1.wikia.nocookie.net/__cb20130722093853/inazuma/es/images/4/45/Zanark.png" },
+      { nombre: "Fei Rune", img: "https://vignette.wikia.nocookie.net/inazuma-eleven/images/6/6e/Fei_Rune.png/revision/latest?cb=20130105020003" },
+      { nombre: "Víctor Blade", img: "https://i.pinimg.com/736x/8e/d4/21/8ed421052911099c098b280d789ab4fa.jpg" },
+      { nombre: "Ricardo Di Rigo", img: "http://vignette3.wikia.nocookie.net/inazuma/images/a/a2/Shindou_Takuto_Galaxy1_HQ.png/revision/latest?cb=20130509125015&path-prefix=es" },
+      { nombre: "JP Lapin", img: "http://img1.wikia.nocookie.net/__cb20121125015929/inazuma/es/images/8/80/J.P_IED.png" },
+      { nombre: "Arion Sherwind", img: "http://img3.wikia.nocookie.net/__cb20131026072051/inazuma/es/images/5/5a/TenmaMatsukaze.png" },
+      { nombre: "Gabriel García", img: "https://pm1.narvii.com/7137/c6379a4c4572e659376a96ec46b93e38bc38f2d2r1-306-282v2_hq.jpg" },
+      { nombre: "Sol Díaz", img: "https://vignette.wikia.nocookie.net/inazuma-eleven/images/2/2e/Amemiya_Taiyou_CS25_HQ.png/revision/latest?cb=20130304150017&path-prefix=nl" },
+      { nombre: "Bailong", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/2/24/Hakuryuu.jpg/revision/latest?cb=20131110085200&path-prefix=fr" },
+      { nombre: "Ace Server", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/2/22/Ace_Server.png/revision/latest?cb=20230803213713&path-prefix=fr" },
+      { nombre: "Adrian Speed", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/6/68/Adrian_Speed.png/revision/latest?cb=20230707230911&path-prefix=fr" },
+      { nombre: "Adriano Donatì", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/06/Goujin_Tetsunosuke_%282%29.png/revision/latest?cb=20180902184650&path-prefix=fr" },
+      { nombre: "Aiden Froste", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/d/da/Aiden_avant_l%27accident.jpg/revision/latest?cb=20200329151141&path-prefix=fr" },
+      { nombre: "Aitor Cazador", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/7/7f/Kariya_Masaki_screenshot-1-.png/revision/latest?cb=20241013054908&path-prefix=fr" },
+      { nombre: "Akura Niyāto", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/f/fc/Akura_Niy%C4%81to.png/revision/latest?cb=20240513155630&path-prefix=fr" },
+      { nombre: "Alan Master", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/03/Alan_Master.png/revision/latest?cb=20210410002228&path-prefix=fr" },
+      { nombre: "Langford Ash", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/b/b5/Lang.jpg/revision/latest?cb=20140724202836&path-prefix=fr" },
+      { nombre: "Lars Dijkstra", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/3/37/Lars_Dijkstra.PNG/revision/latest?cb=20150605220359&path-prefix=fr" },
+      { nombre: "Lephiel", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/a/a6/Elfel.jpg/revision/latest?cb=20121215082832&path-prefix=fr" },
+      { nombre: "Luca", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/2/21/Luca.png/revision/latest?cb=20180228175532&path-prefix=fr" },
+      { nombre: "Lucien Dark", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/d/dd/Kageyama..-1-.png/revision/latest?cb=20120619125636&path-prefix=fr" },
+      { nombre: "Sail Bluesea", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/9/96/Kirigakure_Saiji_HQ_016.png/revision/latest?cb=20120907142358&path-prefix=fr" },
+      { nombre: "Samguk Han", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/07/250px-Sangoku_EP45-1-.png/revision/latest?cb=20241105182403&path-prefix=fr" },
+      { nombre: "Scott Banyan", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/6/6b/Kogure_Yuuya.png/revision/latest?cb=20241209090809&path-prefix=fr" },
+      { nombre: "Shadow Cimmerian", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/b/bc/Yamino_kageto_9523.jpg/revision/latest?cb=20140723030222&path-prefix=fr" },
+      { nombre: "Bellatrix", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/d/dd/250px-Ulvida.jpg/revision/latest?cb=20241218204146&path-prefix=fr" },
+      { nombre: "Barry Potts", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/6/68/Adrian_Speed.png/revision/latest?cb=20230707230911&path-prefix=fr" },
+      { nombre: "Beck Heath", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/0f/Beck.jpg/revision/latest?cb=20140805120505&path-prefix=fr" },
+      { nombre: "Cadence Soundtown", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/4/49/Otomura_Gakuya_5.png/revision/latest?cb=20120824165957&path-prefix=fr" },
+      { nombre: "Caleb Stonewall", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/a/a3/Fudou.jpg/revision/latest?cb=20211029000322&path-prefix=fr" },
+      { nombre: "Camellia Travis", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/f/f8/Kudou-Fuyuka.png/revision/latest?cb=20241116171309&path-prefix=fr" },
+      { nombre: "Carlos Lagarto", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/f/fe/Carlos.png/revision/latest?cb=20130104135934&path-prefix=fr" },
+      { nombre: "Carrie McCuring", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/00/Carrie_McCuring.png/revision/latest?cb=20240623195334&path-prefix=fr" },
+      { nombre: "Federigo Cinco", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/01/Federigo_Cinco.png/revision/latest?cb=20230503172928&path-prefix=fr" },
+      { nombre: "Xavier Foster", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/8/82/Kiyama_Main.png/revision/latest?cb=20180909084740&path-prefix=fr" },
+      { nombre: "Xavier Schiller", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/7/7f/Kira_Hiroto_Ares_anime_HD_1.png/revision/latest?cb=20180909094811&path-prefix=fr" },
+      { nombre: "Yūri Averin", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/4/4d/Y%C5%ABri_Averin.png/revision/latest?cb=20250124082237&path-prefix=fr" },
+      { nombre: "Zaffar Malayev", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/8/8d/Zaura_Galaxy_15_HQ.png/revision/latest?cb=20170318152506&path-prefix=fr" },
+      { nombre: "Zeke Valanche", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/8/8c/Segata_Ryuuichirou_3.jpg/revision/latest?cb=20250209105239&path-prefix=fr" },
+      { nombre: "Namiba Mibu", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/0/01/Namiba_Mibu.png/revision/latest?cb=20250108155053&path-prefix=fr" },
+      { nombre: "Nasir Mustafa", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/1/1d/Nasser.jpg/revision/latest?cb=20121028093107&path-prefix=fr" },
+      { nombre: "Nathan Jones", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/d/d9/Nata_Juuzou.jpg/revision/latest?cb=20120916161557&path-prefix=fr" },
+      { nombre: "Bash Lancer", img: "https://static.wikia.nocookie.net/inazuma-eleven/images/d/d4/Baddap_Sleed.png/revision/latest?cb=20120806131008&path-prefix=fr" },
+    ];
+
+    let indicesDisponibles = jugadores.map((_, i) => i);
+    let actual = obtenerSiguienteIndice();
+    let errores = 0;
+    let aciertos = 0;
+    let intentos = 0;
+
+    function actualizarContador() {
+      document.getElementById("contador").textContent = `Aciertos: ${aciertos} | Errores: ${errores} de 60`;
+    }
+
+    function obtenerSiguienteIndice() {
+      if (indicesDisponibles.length === 0) {
+        indicesDisponibles = jugadores.map((_, i) => i);
+      }
+      const aleatorio = Math.floor(Math.random() * indicesDisponibles.length);
+      return indicesDisponibles.splice(aleatorio, 1)[0];
+    }
+
+    function mostrarJugador() {
+      document.getElementById("jugadorImg").src = jugadores[actual].img;
+      document.getElementById("respuesta").value = "";
+      document.getElementById("resultado").innerText = "";
+      intentos = 0;
+    }
+
+    function verificarNombre() {
+      const entrada = document.getElementById("respuesta").value.trim().toLowerCase();
+      const correcto = jugadores[actual].nombre.toLowerCase();
+      const resultado = document.getElementById("resultado");
+
+      if (entrada === correcto) {
+        document.getElementById("sonidoAcierto").play();$1aciertos++;
+        actualizarContador();
+        actual = obtenerSiguienteIndice();
+        setTimeout(mostrarJugador, 1000);
+      } else {
+        intentos++;
+        document.getElementById("sonidoFallo").play();
+        if (intentos >= 2) {
+          resultado.innerText = `Incorrecto. La respuesta era: ${jugadores[actual].nombre}`;
+          resultado.className = "incorrecto";
+          errores++;
+          actualizarContador();
+          actual = obtenerSiguienteIndice();
+          setTimeout(mostrarJugador, 2000);
+        } else {
+          resultado.innerText = "Incorrecto. Intenta de nuevo.";
+          resultado.className = "incorrecto";
+        }
+      }
+    }
+
+    function mostrarSugerencias() {
+      const input = document.getElementById("respuesta");
+      const container = document.getElementById("sugerenciasContainer");
+      const texto = input.value.toLowerCase();
+      container.innerHTML = "";
+
+      if (texto.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+
+      const sugerencias = jugadores.filter(j => j.nombre.toLowerCase().includes(texto)).slice(0, 5);
+      sugerencias.forEach(j => {
+        const div = document.createElement("div");
+        div.className = "sugerencia";
+        div.textContent = j.nombre;
+        div.onclick = () => {
+          input.value = j.nombre;
+          container.style.display = "none";
+        };
+        container.appendChild(div);
+      });
+
+      container.style.display = sugerencias.length > 0 ? "block" : "none";
+    }
+
+    function ocultarSugerencias() {
+      setTimeout(() => {
+        document.getElementById("sugerenciasContainer").style.display = "none";
+      }, 200);
+    }
+
+    mostrarJugador();
+    actualizarContador();
+  </script>
+</body>
+</html>
